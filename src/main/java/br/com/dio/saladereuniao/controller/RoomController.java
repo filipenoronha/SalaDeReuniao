@@ -16,35 +16,45 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
 import javax.validation.Valid;
 
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController @CrossOrigin(origins = "http://localhost:4200")
-@RequestMapping("/api/v1")
+@RestController
+@CrossOrigin(origins = "http://localhost:4200")
+@RequestMapping("/rooms")
 public class RoomController {
 	
 	@Autowired
 	private RoomRepository repository;
 	
-	@GetMapping("/rooms")
+	@GetMapping
 	public List<Room> getAllRooms(){
 		return repository.findAll();
 	}
-	@GetMapping("/rooms/{id}")
-	public ResponseEntity<Room> getRoomById(@PathVariable(value = "id") long roomId)
+	@GetMapping("/{roomId}")
+	public ResponseEntity<Room> getRoomById(@PathVariable long roomId)
 		throws ResourceNotFoundException {
-			Room room = repository.findById(roomId)
-			.orElseThrow(()-> new ResourceNotFoundException("Room not Found: " + roomId));
-			return ResponseEntity.ok().body(room);
+		
+			Optional<Room> room = repository.findById(roomId);
+			if(room.isPresent()) {
+				return ResponseEntity.ok(room.get());
+			}
+			else
+			{
+				throw new ResourceNotFoundException("Room not found for this id");
+			}
+			
 		}
-	@PostMapping("/rooms")
+	@PostMapping
 	public Room createRoom(@Valid @RequestBody Room room) {
 		return repository.save(room);
 	}
 	
-	@PutMapping("/rooms/{id}")
-	public ResponseEntity<Room> updateRoom(@PathVariable (value = "id") Long roomId,
+	@PutMapping("/{id}")
+	public ResponseEntity<Room> updateRoom(@PathVariable (value = "id") long roomId,
 			@Valid @RequestBody Room roomDetails)
 			throws ResourceNotFoundException {
 		Room room = repository.findById(roomId)
@@ -57,8 +67,8 @@ public class RoomController {
 		return ResponseEntity.ok(updateRoom);
 	}
 	
-	@DeleteMapping("rooms/{id}")
-	public Map<String, Boolean> deleteRoom (@PathVariable(value="id") Long roomId)
+	@DeleteMapping("/{id}")
+	public Map<String, Boolean> deleteRoom (@PathVariable(value="id") long roomId)
 	throws ResourceNotFoundException{
 		Room room = repository.findById(roomId)
 				.orElseThrow(() -> new ResourceNotFoundException("Room not found for this id:"+ roomId));
